@@ -6,6 +6,10 @@ const actions = {
   newNodeState: createAction('NEW_NODE_STATE', resolve => {
     return (nodeState: NodeState) => resolve({ nodeState })
   }),
+  initSimpleID: createAction('INIT_SIMPLE_ID'),
+  loadSimpleID: createAction('LOAD_SIMPLE_ID', resolve => {
+    return (simpleTextile: string) => resolve({ simpleTextile })
+  }),
   loadIPFSDataSuccess: createAction('LOAD_IPFS_DATA_SUCCESS', resolve => {
     return (ipfsImage: string) => resolve({ ipfsImage })
   }),
@@ -19,12 +23,14 @@ export type NodeState = 'started' | 'stopped' | 'starting' | 'unknown' | 'error'
 export interface MainState {
   online: boolean
   nodeState: NodeState
-  ipfsImage?: string
+  ipfsImage?: string,
+  simpleTextile: string
 }
 
 const initialState: MainState = {
   online: false,
-  nodeState: 'stopped'
+  nodeState: 'stopped',
+  simpleTextile: ''
 }
 
 export function reducer(state = initialState, action: MainActions) {
@@ -34,6 +40,9 @@ export function reducer(state = initialState, action: MainActions) {
     }
     case getType(actions.newNodeState): {
       return { ...state, nodeState: action.payload.nodeState }
+    }
+    case getType(actions.loadSimpleID): {
+      return { ...state, simpleTextile: action.payload.simpleTextile }
     }
     case getType(actions.loadIPFSDataSuccess): {
       return {
@@ -48,6 +57,7 @@ export function reducer(state = initialState, action: MainActions) {
 
 export const MainSelectors = {
   nodeOnline: (state: RootState) => state.main.online,
-  nodeState: (state: RootState) => state.main.nodeState
+  nodeState: (state: RootState) => state.main.nodeState,
+  simpleId: (state: RootState) => state.main.simpleTextile
 }
 export default actions

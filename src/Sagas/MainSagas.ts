@@ -21,14 +21,34 @@ function* initializeTextile() {
         false,
         false
       )
+      console.log("Textile Phrase", phrase)
     }
-    
+
     yield call(Textile.launch, textileRepoPath, false)
-    
+
   } catch (error) {
     yield put(MainActions.newNodeState('error'))
   }
 }
+
+// function* initializeTextileWithSimpleID() {
+//   try {
+//     const textileSeed = "SX9ZgiGn7NqX1yQ1x1yZgscnb4KKqqUnu7wrSWwdRHgqzWH9"
+//     const textileRepoPath = `${FS.DocumentDirectoryPath}/textile-go`
+//     const phrase = yield call(
+//       Textile.initialize,
+//       textileRepoPath,
+//       textileSeed,
+//       false,
+//       false
+//     )
+//     console.log("Textile Phrase", phrase)
+//     yield call(Textile.launch, textileRepoPath, false)
+//
+//   } catch (error) {
+//     yield put(MainActions.newNodeState('error'))
+//   }
+// }
 
 export function* onOnline(action: ActionType<typeof MainActions.nodeOnline>) {
   console.info('Running onOnline Saga')
@@ -63,9 +83,60 @@ export function* newNodeState(
   }
 }
 
+export function* simpleIDFun(action: ActionType<typeof MainActions.initSimpleID>) {
+  console.info('Running simpleID Saga')
+  const username = `username_${Date.now()}`
+  const app_origin = 'https://textile.io/'
+  let response = yield call (fetch, 'http://localhost:3000/keychain', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: '-LmCb96-TquOlN37LpM0',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username,
+      password: 'test1234',
+      email: 'nomailfakery@gmail.com',
+      development: 'true',
+      devId: 'imanewdeveloper'
+    }),
+  });
+  // console.log("***************************Keychain", response._bodyText)
+  if (response.status === 200) {
+    console.log("Keychain", response._bodyText)
+    response = yield call (fetch, 'http://localhost:3000/appkeys', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: '-LmCb96-TquOlN37LpM0',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        password: 'test1234',
+        profile: `"{\\"@type\\":\\"Person\\",\\"@context\\":\\"http://schema.org\\",\\"apps\\":{\\"${app_origin}\\":\\"\\"}}"`,
+        url: app_origin,
+        development: 'true',
+        devId: 'imanewdeveloper'
+      }),
+    });
+    const appKeys = JSON.parse(response._bodyText)
+    console.log("App Keys", appKeys, appKeys.textile)
+    yield put(MainActions.loadSimpleID(appKeys.textile))
+  }
+  else {
+    //simple id failed
+    console.log('SimpleID failed')
+    yield put(MainActions.loadSimpleID('FAILED'))
+  }
+}
+
 // watcher saga: watches for actions dispatched to the store, starts worker saga
 export function* mainSagaInit() {
+  // yield call(initializeTextileWithSimpleID)
   yield call(initializeTextile)
+  yield call(simpleIDFun)
   yield takeLatest('NODE_ONLINE', onOnline)
   yield takeLatest('NEW_NODE_STATE', newNodeState)
   yield takeLatest('LOAD_IPFS_DATA_REQUEST', loadIPFSData)

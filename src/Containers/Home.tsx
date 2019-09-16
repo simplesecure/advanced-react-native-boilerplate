@@ -5,10 +5,12 @@ import {
   View,
   Text,
   Image,
+  Button
 } from 'react-native'
 import { RootAction, RootState } from '../Redux/Types'
 import styles from './Styles'
 import { NodeState } from '../Redux/MainRedux'
+import MainActions from '../Redux/MainRedux'
 
 class Home extends React.Component<StateProps> {
   render() {
@@ -30,6 +32,12 @@ class Home extends React.Component<StateProps> {
         <View style={styles.ipfs}>
           <Text style={styles.statusText}>{previewText}</Text>
           {this.props.ipfsImage && this.renderImage()}
+          <Button
+            title="SimpleID Textile Seed"
+            disabled
+            onPress={() => this.props.doSimpleIdStuff()}
+          />
+          <Text style={styles.statusText}>{this.props.simpleTextile}</Text>
         </View>
       </View>
     )
@@ -49,19 +57,23 @@ class Home extends React.Component<StateProps> {
 
 interface StateProps {
   nodeState: NodeState
+  simpleTextile: string
   online: boolean
   ipfsImage?: string
 }
 function mapStateToProps(state: RootState): StateProps {
   return {
     nodeState: state.main.nodeState,
+    simpleTextile: state.main.simpleTextile,
     online: state.main.online,
     ipfsImage: state.main.ipfsImage
   }
 }
 
 function mapDispatchToProps(dispatch: Dispatch<RootAction>): {} {
-  return {}
+  return {
+    doSimpleIdStuff: MainActions.initSimpleID()
+  }
 }
 
 export default connect(
